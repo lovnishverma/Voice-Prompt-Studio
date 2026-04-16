@@ -166,4 +166,4 @@ Accepts a JSON payload to process the raw text through Gemini.
 * **Markdown Export:** One-click generation of `.md` files from the refined output.
 
 ---
-*Developed by a Top-Tier Research Scientist.*
+*Developed by a Lovnish Verma.*
