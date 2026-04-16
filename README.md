@@ -11,7 +11,9 @@ Built with a Flask backend and a lightweight, vanilla HTML/JS/CSS frontend, the 
 
 ---
 
-<img width="746" height="955" alt="image" src="https://github.com/user-attachments/assets/1647384b-8cf7-4441-a94b-df3c51e4a9c5" />
+<img width="787" height="836" alt="image" src="https://github.com/user-attachments/assets/834fb446-8755-4a2a-af24-74fe296d25fe" />
+<img width="702" height="845" alt="image" src="https://github.com/user-attachments/assets/3766db77-a1cf-469c-8855-c0cdc1867fc2" />
+
 
 ---
 
