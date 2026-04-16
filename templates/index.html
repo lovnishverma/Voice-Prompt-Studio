@@ -5,245 +5,558 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Voice → Prompt Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --ink: #1a1a18;
-      --ink2: #555550;
-      --ink3: #99998f;
-      --surface: #faf9f7;
-      --surface2: #f1f0ec;
-      --surface3: #e8e7e2;
-      --accent: #D85A30;
-      --accent2: #F0997B;
-      --accent-bg: #FAECE7;
-      --accent-border: #f0b49a;
-      --green: #3B6D11;
-      --green-bg: #EAF3DE;
-      --border: rgba(30,28,20,0.10);
-      --border2: rgba(30,28,20,0.18);
-      --r: 14px;
-      --rm: 9px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
+      --ink: #0d0c0a;
+      --ink2: #3a3830;
+      --ink3: #8a8880;
+      --ink4: #b8b6ae;
+      --surface: #f5f4f0;
+      --surface2: #eeede8;
+      --surface3: #e4e3dd;
+      --white: #fefefe;
+      --accent: #c94a1a;
+      --accent-light: #f0997b;
+      --accent-bg: #fdf0eb;
+      --accent-border: #f0c4b0;
+      --green: #2d5a14;
+      --green-bg: #e8f2de;
+      --red-bg: #fdeaea;
+      --red: #a32020;
+      --border: rgba(20,18,12,0.09);
+      --border2: rgba(20,18,12,0.15);
+      --border3: rgba(20,18,12,0.22);
+      --r: 18px;
+      --rm: 12px;
+      --rs: 8px;
     }
 
-    html { background: var(--surface); color: var(--ink); }
-    body { font-family: 'DM Mono', monospace; min-height: 100vh; background: var(--surface); }
+    html { background: var(--surface); color: var(--ink); scroll-behavior: smooth; }
 
-    .page { max-width: 700px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
-
-    /* Header */
-    .header { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 2rem; }
-    .header h1 {
-      font-family: 'Instrument Serif', serif;
-      font-size: 32px; font-weight: 400;
-      letter-spacing: -0.5px; color: var(--ink);
-      line-height: 1;
-    }
-    .header h1 em { font-style: italic; color: var(--accent); }
-    .badge {
-      font-size: 10px; letter-spacing: 1.2px; font-weight: 500;
-      background: var(--accent-bg); color: var(--accent);
-      padding: 4px 9px; border-radius: 20px;
-      border: 0.5px solid var(--accent-border);
-      margin-bottom: 4px;
-    }
-
-    /* Lang row */
-    .lang-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 1.25rem; }
-    .lang-btn {
-      font-family: 'DM Mono', monospace; font-size: 11px;
-      padding: 5px 13px; border: 0.5px solid var(--border2);
-      border-radius: 20px; background: var(--surface);
-      color: var(--ink2); cursor: pointer; transition: all 0.15s;
-    }
-    .lang-btn:hover { background: var(--surface2); }
-    .lang-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
-
-    /* Recorder */
-    .recorder-card {
+    body {
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
       background: var(--surface);
+      background-image:
+        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(201,74,26,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 30% at 10% 90%, rgba(201,74,26,0.04) 0%, transparent 70%);
+    }
+
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+    }
+    .brand {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      color: var(--ink);
+    }
+    .brand .arrow {
+      color: var(--accent);
+      font-style: normal;
+      display: inline-block;
+      animation: arrowPop 2.4s ease-in-out infinite;
+    }
+    @keyframes arrowPop {
+      0%,100% { transform: translateX(0); opacity: 1; }
+      50% { transform: translateX(4px); opacity: 0.6; }
+    }
+    .studio-pill {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: var(--ink);
+      color: var(--surface);
+      padding: 5px 11px;
+      border-radius: 20px;
+      margin-top: 5px;
+    }
+    .header-sub {
+      font-size: 13px;
+      color: var(--ink3);
+      font-weight: 400;
+      letter-spacing: 0.2px;
+    }
+
+    /* ─── LANGUAGE ROW ─── */
+    .lang-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .lang-btn {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border: 0.5px solid var(--border2);
+      border-radius: 20px;
+      background: var(--white);
+      color: var(--ink3);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      letter-spacing: 0.3px;
+    }
+    .lang-btn:hover { background: var(--surface2); color: var(--ink2); border-color: var(--border3); }
+    .lang-btn.active {
+      background: var(--ink);
+      color: var(--white);
+      border-color: var(--ink);
+      box-shadow: 0 2px 8px rgba(13,12,10,0.18);
+    }
+
+    /* ─── RECORDER CARD ─── */
+    .recorder-card {
+      background: var(--white);
       border: 0.5px solid var(--border2);
       border-radius: var(--r);
-      padding: 1.75rem 1.25rem 1.25rem;
-      text-align: center;
-      box-shadow: var(--shadow);
-      margin-bottom: 1rem;
+      padding: 2rem 1.5rem 1.5rem;
+      margin-bottom: 0.75rem;
+      position: relative;
+      overflow: hidden;
     }
-    .orb-wrap { position: relative; display: inline-block; margin-bottom: 14px; }
+    .recorder-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .recorder-card.is-recording::before { opacity: 1; }
+
+    .rec-inner {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    /* Orb */
+    .orb-area { position: relative; flex-shrink: 0; }
     .rec-orb {
-      width: 80px; height: 80px; border-radius: 50%;
-      border: 1.5px solid var(--border2);
+      width: 76px; height: 76px;
+      border-radius: 50%;
+      border: 0.5px solid var(--border3);
       background: var(--surface2);
-      cursor: pointer; display: inline-flex;
-      align-items: center; justify-content: center;
-      font-size: 28px; transition: all 0.2s;
-      position: relative; z-index: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+      position: relative;
+      z-index: 1;
+      outline: none;
     }
-    .rec-orb:hover { background: var(--surface3); transform: scale(1.03); }
+    .rec-orb:hover { background: var(--surface3); transform: scale(1.04); }
+    .rec-orb:active { transform: scale(0.97); }
     .rec-orb.recording {
-      background: var(--accent); border-color: var(--accent);
-      animation: orbPulse 1.3s ease-in-out infinite;
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 6px rgba(201,74,26,0.12);
+      animation: orbBreath 1.6s ease-in-out infinite;
     }
     .rec-orb.processing {
-      background: var(--surface3); cursor: default;
-      animation: orbSpin 1.2s linear infinite;
+      background: var(--surface3);
+      cursor: default;
+      border-color: var(--ink4);
     }
-    .ring {
-      position: absolute; inset: -8px; border-radius: 50%;
-      border: 1.5px solid var(--accent); opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .rec-orb.recording ~ .ring { animation: ringPulse 1.3s ease-in-out infinite; }
-
-    @keyframes orbPulse {
-      0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(216,90,48,0.25); }
-      50%      { transform: scale(1.06); box-shadow: 0 0 0 14px rgba(216,90,48,0); }
-    }
-    @keyframes orbSpin { to { transform: rotate(360deg); } }
-    @keyframes ringPulse {
-      0%   { transform: scale(1); opacity: 0.6; }
-      100% { transform: scale(1.5); opacity: 0; }
-    }
-
-    .timer { font-size: 30px; font-weight: 300; letter-spacing: 3px; color: var(--ink); margin-bottom: 6px; }
-    .rec-label { font-size: 11px; color: var(--ink3); letter-spacing: 0.5px; margin-bottom: 12px; }
-
-    .waveform {
+    .orb-icon {
+      width: 26px; height: 26px;
+      position: relative;
       display: flex; align-items: center; justify-content: center;
-      gap: 3px; height: 36px; margin-bottom: 14px;
+    }
+    /* Mic icon SVG */
+    .orb-icon svg { width: 22px; height: 22px; }
+
+    @keyframes orbBreath {
+      0%,100% { box-shadow: 0 0 0 6px rgba(201,74,26,0.12); }
+      50% { box-shadow: 0 0 0 14px rgba(201,74,26,0.04); }
+    }
+
+    /* Ripple rings */
+    .rec-ring {
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 1px solid var(--accent);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .rec-orb.recording ~ .rec-ring { animation: ringOut 1.6s ease-out infinite; }
+    .rec-orb.recording ~ .rec-ring:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes ringOut {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }
+
+    /* Right side of recorder */
+    .rec-right { flex: 1; }
+    .timer {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer.recording { color: var(--accent); }
+    .rec-label {
+      font-size: 11px;
+      color: var(--ink3);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .waveform {
+      display: flex;
+      align-items: center;
+      gap: 2.5px;
+      height: 28px;
     }
     .wave-bar {
-      width: 4px; border-radius: 2px;
-      background: var(--accent2); height: 6px;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent-light);
+      height: 4px;
       transition: height 0.05s ease;
     }
 
-    .upload-row { display: flex; justify-content: center; }
-    .upload-btn {
-      font-family: 'DM Mono', monospace; font-size: 11px;
-      padding: 6px 15px; border: 0.5px solid var(--border2);
-      border-radius: 20px; background: var(--surface2);
-      color: var(--ink2); cursor: pointer; transition: all 0.15s;
+    /* Upload row */
+    .upload-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 0.5px solid var(--border);
     }
-    .upload-btn:hover { background: var(--surface3); }
-
-    /* Status */
-    .status { font-size: 11px; color: var(--ink3); text-align: center; min-height: 26px; padding: 4px 0; letter-spacing: 0.3px; }
-    .status.err { color: #A32D2D; font-weight: 500; }
-    .status.ok  { color: var(--green); font-weight: 500; }
-
-    /* Transcript */
-    .panel {
+    .upload-btn {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border: 0.5px solid var(--border2);
+      border-radius: 20px;
       background: var(--surface);
+      color: var(--ink3);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .upload-btn:hover { background: var(--surface2); color: var(--ink2); border-color: var(--border3); }
+
+    /* ─── STATUS BAR ─── */
+    .status-bar {
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      color: var(--ink3);
+      letter-spacing: 0.3px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      padding: 0 4px;
+      transition: color 0.2s;
+    }
+    .status-bar.err {
+      color: var(--red);
+      background: var(--red-bg);
+      border-radius: var(--rs);
+      padding: 6px 12px;
+    }
+    .status-bar.ok {
+      color: var(--green);
+      background: var(--green-bg);
+      border-radius: var(--rs);
+      padding: 6px 12px;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      margin-right: 7px;
+      flex-shrink: 0;
+    }
+
+    /* ─── PANELS ─── */
+    .panel {
+      background: var(--white);
       border: 0.5px solid var(--border2);
       border-radius: var(--r);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       overflow: hidden;
-      box-shadow: var(--shadow);
     }
     .panel-head {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 9px 14px;
-      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface);
       border-bottom: 0.5px solid var(--border);
     }
-    .panel-head .label { font-size: 10px; letter-spacing: 1px; color: var(--ink3); font-weight: bold; }
-    .panel-head .meta { font-size: 10px; color: var(--ink3); }
-    .panel-body { padding: 14px 16px; }
-    .editable {
-      font-size: 14px; line-height: 1.85; color: var(--ink);
-      outline: none; min-height: 64px; white-space: pre-wrap;
+    .panel-label {
+      font-size: 9px;
+      letter-spacing: 1.8px;
+      color: var(--ink3);
+      font-weight: 700;
+      text-transform: uppercase;
     }
-    .editable:empty::before { content: attr(data-ph); color: var(--ink3); }
-    .edit-hint { font-size: 10px; color: var(--ink3); margin-top: 6px; }
+    .panel-meta { font-size: 11px; color: var(--ink4); font-weight: 500; }
+    .panel-body { padding: 16px 18px; }
 
-    /* Refine controls */
-    .refine-section { margin-bottom: 1rem; }
-    .section-label { font-size: 10px; letter-spacing: 1px; color: var(--ink3); font-weight: bold; margin-bottom: 8px; }
-    .tone-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
-    .tone-btn {
-      font-family: 'DM Mono', monospace; font-size: 11px;
-      padding: 5px 13px; border: 0.5px solid var(--border2);
-      border-radius: 20px; background: var(--surface);
-      color: var(--ink2); cursor: pointer; transition: all 0.15s;
+    .editable {
+      font-family: 'Syne Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.9;
+      color: var(--ink);
+      outline: none;
+      min-height: 60px;
+      white-space: pre-wrap;
     }
-    .tone-btn:hover { background: var(--surface2); }
-    .tone-btn.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-border); }
+    .editable:empty::before { content: attr(data-ph); color: var(--ink4); }
+    .edit-hint {
+      font-size: 10.5px;
+      color: var(--ink4);
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    /* ─── REFINE SECTION ─── */
+    .refine-section { margin-bottom: 0.75rem; }
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 1.8px;
+      color: var(--ink3);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .tone-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .tone-btn {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 15px;
+      border: 0.5px solid var(--border2);
+      border-radius: 20px;
+      background: var(--white);
+      color: var(--ink3);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.2px;
+    }
+    .tone-btn:hover { background: var(--surface2); color: var(--ink2); }
+    .tone-btn.active {
+      background: var(--accent-bg);
+      color: var(--accent);
+      border-color: var(--accent-border);
+      font-weight: 700;
+    }
 
     .refine-btn {
-      font-family: 'DM Mono', monospace; font-size: 12px;
-      padding: 9px 22px; background: var(--ink); color: #fff;
-      border: none; border-radius: 22px; cursor: pointer;
-      transition: all 0.2s ease-in-out; letter-spacing: 0.3px;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 12px 26px;
+      background: var(--ink);
+      color: var(--white);
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
-    .refine-btn:hover { opacity: 0.82; }
-    /* Ensure a disabled button prevents clicks completely */
-    .refine-btn:disabled { 
-      opacity: 0.35; 
-      cursor: not-allowed; 
-      pointer-events: none; 
+    .refine-btn:hover { background: #2a2820; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(13,12,10,0.2); }
+    .refine-btn:active { transform: translateY(0); }
+    .refine-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+      transform: none;
+      box-shadow: none;
     }
-    .refine-btn.cooldown { background: #A32D2D; opacity: 0.8; color: #fff; }
+    .refine-btn.cooldown { background: var(--red); }
+    .btn-arrow {
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+    .refine-btn:not(:disabled):hover .btn-arrow { transform: translateX(3px); }
 
-    /* Prompt result */
+    /* ─── PROMPT OUTPUT ─── */
     .prompt-panel {
       background: var(--accent-bg);
       border: 0.5px solid var(--accent-border);
       border-radius: var(--r);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       overflow: hidden;
     }
-    .prompt-panel .panel-head { background: rgba(216,90,48,0.07); border-bottom-color: var(--accent-border); }
-    .prompt-panel .label { color: var(--accent); }
-    .prompt-text { 
-      font-size: 14px; 
-      line-height: 1.85; 
-      color: var(--ink); 
+    .prompt-panel .panel-head {
+      background: rgba(201,74,26,0.06);
+      border-bottom-color: var(--accent-border);
+    }
+    .prompt-panel .panel-label { color: var(--accent); }
+    .prompt-text {
+      font-family: 'Syne Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.85;
+      color: var(--ink);
       white-space: pre-wrap;
-      max-height: 400px;
+      max-height: 420px;
       overflow-y: auto;
       padding-right: 6px;
     }
-    /* Custom scrollbar for prompt text */
-    .prompt-text::-webkit-scrollbar { width: 6px; }
+    .prompt-text::-webkit-scrollbar { width: 4px; }
     .prompt-text::-webkit-scrollbar-thumb { background: var(--accent-border); border-radius: 4px; }
 
     .copy-btn {
-      font-family: 'DM Mono', monospace; font-size: 10px;
-      padding: 4px 11px; border: 0.5px solid var(--accent-border);
-      border-radius: 20px; background: transparent;
-      color: var(--accent); cursor: pointer; transition: all 0.15s;
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 5px 13px;
+      border: 0.5px solid var(--accent-border);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .copy-btn:hover { background: var(--accent); color: #fff; }
+    .copy-btn:hover { background: var(--accent); color: var(--white); }
 
-    /* History */
-    .divider { height: 0.5px; background: var(--border); margin: 1.5rem 0 1rem; }
+    /* ─── HISTORY ─── */
+    .divider {
+      height: 0.5px;
+      background: var(--border);
+      margin: 2rem 0 1.25rem;
+    }
     .history-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
       border: 0.5px solid var(--border);
-      border-radius: var(--rm); padding: 10px 14px;
-      margin-bottom: 8px; cursor: pointer; transition: background 0.12s;
+      border-radius: var(--rm);
+      padding: 11px 14px;
+      margin-bottom: 7px;
+      cursor: pointer;
+      transition: all 0.12s;
+      background: var(--white);
     }
-    .history-item:hover { background: var(--surface2); }
-    .history-snippet { font-size: 12px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .history-meta { font-size: 10px; color: var(--ink3); margin-top: 3px; }
+    .history-item:hover { background: var(--surface2); border-color: var(--border2); }
+    .history-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink4);
+      padding-top: 1px;
+      min-width: 18px;
+      letter-spacing: 0.3px;
+    }
+    .history-content { flex: 1; overflow: hidden; }
+    .history-snippet {
+      font-size: 12.5px;
+      color: var(--ink2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+    .history-meta { font-size: 10px; color: var(--ink4); margin-top: 3px; font-weight: 600; letter-spacing: 0.3px; }
+    .history-tone {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: var(--surface2);
+      color: var(--ink3);
+      padding: 2px 8px;
+      border-radius: 10px;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
 
-    /* Hidden */
-    .hidden { display: none; }
+    /* ─── PROCESSING SPINNER ─── */
+    .spin {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-left: 2px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 0.5px solid var(--border);
+    }
+    .footer-text {
+      font-size: 11px;
+      color: var(--ink4);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .footer-text .heart { color: var(--accent); }
+    .footer-text .name { color: var(--ink3); }
+
+    /* ─── UTILITY ─── */
+    .hidden { display: none !important; }
     #fileInput { display: none; }
+
+    /* ─── REVEAL ANIMATION ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .reveal.shown {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
 <div class="page">
 
+  <!-- Header -->
   <div class="header">
-    <h1>Voice <em>→</em> Prompt</h1>
-    <span class="badge">STUDIO</span>
+    <div class="header-top">
+      <h1 class="brand">Voice <span class="arrow">→</span> Prompt</h1>
+      <span class="studio-pill">Studio</span>
+    </div>
+    <p class="header-sub">Speak naturally — get a production-ready AI prompt</p>
   </div>
 
-  <!-- Language Selection -->
+  <!-- Language Row -->
   <div class="lang-row" id="langRow">
     <button class="lang-btn active" data-lang="en-IN">EN</button>
     <button class="lang-btn" data-lang="hi-IN">हि</button>
@@ -255,82 +568,109 @@
     <button class="lang-btn" data-lang="gu-IN">ગ</button>
   </div>
 
-  <!-- Recorder Section -->
-  <div class="recorder-card">
-    <div class="orb-wrap">
-      <button class="rec-orb" id="recBtn" onclick="toggleRecord()">
-        <span id="recIcon">🎤</span>
-      </button>
-      <div class="ring" id="ring"></div>
+  <!-- Recorder Card -->
+  <div class="recorder-card" id="recCard">
+    <div class="rec-inner">
+      <div class="orb-area">
+        <button class="rec-orb" id="recBtn" onclick="toggleRecord()" aria-label="Record voice">
+          <div class="orb-icon" id="orbIcon">
+            <!-- Mic icon -->
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" id="micSvg">
+              <rect x="8.5" y="2" width="7" height="12" rx="3.5" fill="currentColor"/>
+              <path d="M5 11c0 3.866 3.134 7 7 7s7-3.134 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="12" y1="18" x2="12" y2="22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="9" y1="22" x2="15" y2="22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </button>
+        <div class="rec-ring" id="ring1"></div>
+        <div class="rec-ring" id="ring2"></div>
+      </div>
+
+      <div class="rec-right">
+        <div class="timer" id="timer">0:00</div>
+        <div class="rec-label" id="recLabel">tap to record</div>
+        <div class="waveform" id="waveform"></div>
+      </div>
     </div>
-    <div class="timer" id="timer">0:00</div>
-    <div class="waveform" id="waveform"></div>
-    <div class="rec-label" id="recLabel">tap to record</div>
+
     <div class="upload-row">
-      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">upload audio file</button>
+      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Upload audio file
+      </button>
       <input type="file" id="fileInput" accept="audio/*,video/webm" onchange="handleUpload(event)" />
     </div>
   </div>
 
-  <div class="status" id="statusBar"></div>
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar">
+    <span class="status-dot hidden" id="statusDot"></span>
+    <span id="statusText"></span>
+  </div>
 
-  <!-- Transcript Display -->
-  <div class="panel hidden" id="transcriptCard">
+  <!-- Transcript Panel -->
+  <div class="panel reveal hidden" id="transcriptCard">
     <div class="panel-head">
-      <span class="label">TRANSCRIPT</span>
-      <span class="meta" id="wordCount">0 words</span>
+      <span class="panel-label">Transcript</span>
+      <span class="panel-meta" id="wordCount">0 words</span>
     </div>
     <div class="panel-body">
       <div class="editable" id="transcriptText" contenteditable="true" data-ph="Your speech will appear here…"></div>
-      <div class="edit-hint">editable — fix any mistakes before refining</div>
+      <div class="edit-hint">Editable — fix any mistakes before refining</div>
     </div>
   </div>
 
   <!-- Refine Controls -->
-  <div class="refine-section hidden" id="refineSection">
-    <div class="section-label">REFINE TONE</div>
+  <div class="refine-section reveal hidden" id="refineSection">
+    <div class="section-label">Refine Tone</div>
     <div class="tone-row">
-      <button class="tone-btn active" data-tone="clear">clear</button>
-      <button class="tone-btn" data-tone="detailed">detailed</button>
-      <button class="tone-btn" data-tone="concise">concise</button>
-      <button class="tone-btn" data-tone="creative">creative</button>
-      <button class="tone-btn" data-tone="technical">technical</button>
-      <button class="tone-btn" data-tone="step-by-step">step-by-step</button>
+      <button class="tone-btn active" data-tone="clear">Clear</button>
+      <button class="tone-btn" data-tone="detailed">Detailed</button>
+      <button class="tone-btn" data-tone="concise">Concise</button>
+      <button class="tone-btn" data-tone="creative">Creative</button>
+      <button class="tone-btn" data-tone="technical">Technical</button>
+      <button class="tone-btn" data-tone="step-by-step">Step-by-step</button>
     </div>
-    <button class="refine-btn" id="refineBtn" onclick="refinePrompt()">refine with gemini ↗</button>
+    <button class="refine-btn" id="refineBtn" onclick="refinePrompt()">
+      Refine with Gemini <span class="btn-arrow">↗</span>
+    </button>
   </div>
 
-  <!-- Refined Prompt Output -->
-  <div class="prompt-panel panel hidden" id="promptCard">
+  <!-- Prompt Output Panel -->
+  <div class="prompt-panel panel reveal hidden" id="promptCard">
     <div class="panel-head">
-      <span class="label">REFINED PROMPT</span>
-      <button class="copy-btn" onclick="copyPrompt()">copy</button>
+      <span class="panel-label">Refined Prompt</span>
+      <button class="copy-btn" onclick="copyPrompt()">Copy</button>
     </div>
     <div class="panel-body">
       <div class="prompt-text" id="promptText"></div>
     </div>
   </div>
 
-  <!-- History Section -->
+  <!-- History -->
   <div class="hidden" id="historyWrap">
     <div class="divider"></div>
-    <div class="section-label">RECENT PROMPTS</div>
+    <div class="section-label">Recent Prompts</div>
     <div id="historyList"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p class="footer-text">Made with <span class="heart">♥</span> by <span class="name">Lovnish Verma</span> · © 2026</p>
   </div>
 
 </div>
 
 <script>
-  // --- Audio Context for Real Waveform ---
-  let audioContext;
-  let analyser;
-  let dataArray;
-  let source;
-  const numBars = 20;
+  // ── Audio Context for waveform ──
+  let audioContext, analyser, dataArray, source;
+  const NUM_BARS = 22;
 
-  // Initialize waveform bars
   const wf = document.getElementById('waveform');
-  for (let i = 0; i < numBars; i++) {
+  for (let i = 0; i < NUM_BARS; i++) {
     const b = document.createElement('div');
     b.className = 'wave-bar';
     wf.appendChild(b);
@@ -342,7 +682,7 @@
   const history = [];
   let cooldownInterval = null;
 
-  // Language selectors
+  // ── Language Selectors ──
   document.querySelectorAll('.lang-btn').forEach(b => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.lang-btn').forEach(x => x.classList.remove('active'));
@@ -351,7 +691,7 @@
     });
   });
 
-  // Tone selectors
+  // ── Tone Selectors ──
   document.querySelectorAll('.tone-btn').forEach(b => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.tone-btn').forEach(x => x.classList.remove('active'));
@@ -360,58 +700,57 @@
     });
   });
 
-  // Transcript word counter & paste sanitization
+  // ── Transcript word counter ──
   const transcriptEl = document.getElementById('transcriptText');
   transcriptEl.addEventListener('input', function () {
     const wc = this.textContent.trim().split(/\s+/).filter(Boolean).length;
     document.getElementById('wordCount').textContent = wc + ' words';
   });
-  
-  // Prevent rich text formatting when pasting into contenteditable
   transcriptEl.addEventListener('paste', function(e) {
     e.preventDefault();
     const text = (e.originalEvent || e).clipboardData.getData('text/plain');
     document.execCommand('insertText', false, text);
   });
 
+  // ── Status ──
   function setStatus(msg, type = '') {
-    const s = document.getElementById('statusBar');
-    s.textContent = msg;
-    s.className = 'status ' + type;
+    const bar = document.getElementById('statusBar');
+    const txt = document.getElementById('statusText');
+    const dot = document.getElementById('statusDot');
+    txt.textContent = msg;
+    bar.className = 'status-bar ' + type;
+    dot.classList.toggle('hidden', !type);
   }
 
+  // ── Timer ──
   function updateTimer() {
     seconds++;
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    document.getElementById('timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    const el = document.getElementById('timer');
+    el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
   }
 
+  // ── Waveform ──
   function animateRealWave() {
     if (!isRecording || !analyser) return;
     waveAnim = requestAnimationFrame(animateRealWave);
     analyser.getByteFrequencyData(dataArray);
-    
     const bars = document.querySelectorAll('.wave-bar');
-    // Map the frequency data to the UI bars
-    const step = Math.floor(dataArray.length / numBars);
-    
-    for (let i = 0; i < numBars; i++) {
+    const step = Math.floor(dataArray.length / NUM_BARS);
+    for (let i = 0; i < NUM_BARS; i++) {
       const val = dataArray[i * step] || 0;
-      // Calculate height (min 6px, max ~32px depending on volume)
-      const height = 6 + (val / 255) * 26; 
-      bars[i].style.height = height + 'px';
+      bars[i].style.height = (4 + (val / 255) * 22) + 'px';
     }
   }
 
   function stopWave() {
     cancelAnimationFrame(waveAnim);
-    document.querySelectorAll('.wave-bar').forEach(b => b.style.height = '6px');
-    if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close();
-    }
+    document.querySelectorAll('.wave-bar').forEach(b => b.style.height = '4px');
+    if (audioContext && audioContext.state !== 'closed') audioContext.close();
   }
 
+  // ── Record toggle ──
   async function toggleRecord() {
     if (!isRecording) await startRecord();
     else stopRecord();
@@ -424,26 +763,25 @@
       mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
       mediaRecorder.start(100);
-      
-      // Setup Real Web Audio API waveform
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      audioContext = new AudioContextClass();
+
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioContext = new AC();
       analyser = audioContext.createAnalyser();
       source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
-      analyser.fftSize = 64; 
+      analyser.fftSize = 64;
       dataArray = new Uint8Array(analyser.frequencyBinCount);
 
       isRecording = true;
       seconds = 0;
       timerInterval = setInterval(updateTimer, 1000);
       animateRealWave();
-      
       setOrbState('recording');
-      setStatus('recording…');
+      setStatus('Recording…');
+      document.getElementById('recCard').classList.add('is-recording');
+      document.getElementById('timer').classList.add('recording');
     } catch (e) {
-      console.error(e);
-      setStatus('microphone access denied or unavailable', 'err');
+      setStatus('Microphone access denied or unavailable', 'err');
     }
   }
 
@@ -453,10 +791,11 @@
     clearInterval(timerInterval);
     stopWave();
     isRecording = false;
-    
     setOrbState('processing');
-    setStatus('processing audio…');
-    
+    setStatus('Processing audio…');
+    document.getElementById('recCard').classList.remove('is-recording');
+    document.getElementById('timer').classList.remove('recording');
+
     mediaRecorder.onstop = async () => {
       const blob = new Blob(audioChunks, { type: 'audio/webm' });
       await sendToServer(blob, 'audio.webm');
@@ -467,7 +806,7 @@
     const file = e.target.files[0];
     if (!file) return;
     setOrbState('processing');
-    setStatus('uploading and processing…');
+    setStatus('Uploading and processing…');
     await sendToServer(file, file.name);
     e.target.value = '';
   }
@@ -476,18 +815,16 @@
     const form = new FormData();
     form.append('audio', blob, filename);
     form.append('language', selectedLang);
-
     try {
       const res = await fetch('/transcribe', { method: 'POST', body: form });
       const data = await res.json();
-      
       if (data.success) {
         showTranscript(data.transcript);
-        setStatus('transcription complete', 'ok');
+        setStatus('Transcription complete', 'ok');
       } else {
         let errMsg = data.error || 'Transcription failed';
         if (errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {
-           errMsg = 'API rate limit reached. Please wait a moment and try again.';
+          errMsg = 'API rate limit reached. Please wait a moment and try again.';
         }
         setStatus(errMsg, 'err');
       }
@@ -497,178 +834,167 @@
     setOrbState('idle');
   }
 
+  // ── Orb States ──
   function setOrbState(state) {
     const btn = document.getElementById('recBtn');
-    const icon = document.getElementById('recIcon');
+    const icon = document.getElementById('orbIcon');
     const label = document.getElementById('recLabel');
-    const ring = document.getElementById('ring');
-    
+    const timer = document.getElementById('timer');
+
     btn.className = 'rec-orb ' + state;
+
     if (state === 'idle') {
-      icon.textContent = '🎤'; label.textContent = 'tap to record';
-      ring.style.animation = 'none';
-      document.getElementById('timer').textContent = '0:00';
+      icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+        <rect x="8.5" y="2" width="7" height="12" rx="3.5" fill="currentColor"/>
+        <path d="M5 11c0 3.866 3.134 7 7 7s7-3.134 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="12" y1="18" x2="12" y2="22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="9" y1="22" x2="15" y2="22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>`;
+      label.textContent = 'tap to record';
+      timer.textContent = '0:00';
+      icon.style.color = 'var(--ink2)';
     } else if (state === 'recording') {
-      icon.textContent = '⏹'; label.textContent = 'recording — tap to stop';
-      ring.style.animation = '';
+      icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+        <rect x="6" y="6" width="12" height="12" rx="2" fill="white"/>
+      </svg>`;
+      icon.style.color = 'white';
+      label.textContent = 'recording — tap to stop';
     } else {
-      icon.textContent = '⟳'; label.textContent = 'processing…';
+      icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+        <path d="M12 2a10 10 0 1 0 10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+      icon.style.color = 'var(--ink3)';
+      icon.style.animation = 'spin 0.7s linear infinite';
+      label.textContent = 'processing…';
     }
+    if (state !== 'processing') icon.style.animation = '';
+  }
+
+  // ── Show / hide panels with animation ──
+  function revealPanel(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('shown'), 20);
   }
 
   function showTranscript(text) {
-    const el = document.getElementById('transcriptText');
-    el.textContent = text;
-    // Dispatch input event to trigger word count calculation
-    el.dispatchEvent(new Event('input'));
-    
-    document.getElementById('transcriptCard').classList.remove('hidden');
-    document.getElementById('refineSection').classList.remove('hidden');
-  }
-  
-  // Hard lock the button to prevent duplicate requests and sliding window abuse
-  function startCooldownTimer(seconds) {
-      const btn = document.getElementById('refineBtn');
-      btn.disabled = true;
-      btn.classList.add('cooldown');
-      
-      let remaining = seconds;
-      
-      // Ensure any existing timers are totally destroyed
-      if (cooldownInterval) clearInterval(cooldownInterval);
-      
-      cooldownInterval = setInterval(() => {
-          if (remaining <= 0) {
-              clearInterval(cooldownInterval);
-              cooldownInterval = null; // Free memory and reset state
-              
-              // Fully unlock the button
-              btn.disabled = false;
-              btn.classList.remove('cooldown');
-              btn.textContent = 'refine with gemini ↗';
-              setStatus('Ready to retry. Click the button again.', 'ok');
-          } else {
-              btn.textContent = `locked — wait ${remaining}s`;
-              setStatus(`API quota reached. Please wait ${remaining} seconds.`, 'err');
-              remaining--;
-          }
-      }, 1000);
+    transcriptEl.textContent = text;
+    transcriptEl.dispatchEvent(new Event('input'));
+    revealPanel('transcriptCard');
+    revealPanel('refineSection');
   }
 
+  // ── Cooldown ──
+  function startCooldownTimer(secs) {
+    const btn = document.getElementById('refineBtn');
+    btn.disabled = true;
+    btn.classList.add('cooldown');
+    let remaining = secs;
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    cooldownInterval = setInterval(() => {
+      if (remaining <= 0) {
+        clearInterval(cooldownInterval);
+        cooldownInterval = null;
+        btn.disabled = false;
+        btn.classList.remove('cooldown');
+        btn.innerHTML = 'Refine with Gemini <span class="btn-arrow">↗</span>';
+        setStatus('Ready to retry. Click the button again.', 'ok');
+      } else {
+        btn.innerHTML = `Locked — wait ${remaining}s`;
+        setStatus(`API quota reached. Please wait ${remaining} seconds.`, 'err');
+        remaining--;
+      }
+    }, 1000);
+  }
+
+  // ── Refine ──
   async function refinePrompt() {
-    const transcript = document.getElementById('transcriptText').textContent.trim();
-    
-    if (!transcript) { 
-        setStatus('no transcript to refine', 'err'); 
-        return; 
-    }
+    const transcript = transcriptEl.textContent.trim();
+    if (!transcript) { setStatus('No transcript to refine', 'err'); return; }
 
     const btn = document.getElementById('refineBtn');
-    
-    // 1. Immediately disable and change text so the user physically sees the click register
-    btn.disabled = true; 
-    btn.textContent = 'engineering prompt…';
-    setStatus('engineering prompt with Gemini…', '');
+    btn.disabled = true;
+    btn.innerHTML = `Engineering prompt… <span class="spin"></span>`;
+    setStatus('Engineering prompt with Gemini…');
 
-    // 2. Artificial delay (600ms) guarantees the user sees the visual state change
-    // This prevents the illusion of the button "doing nothing" if the API instantly returns 429
     await new Promise(r => setTimeout(r, 600));
 
     try {
       const res = await fetch('/refine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript: transcript, tone: selectedTone })
+        body: JSON.stringify({ transcript, tone: selectedTone })
       });
-      
       const data = await res.json();
-      
+
       if (data.success) {
         showPrompt(data.prompt, transcript);
-        setStatus('prompt ready', 'ok');
-        btn.disabled = false; 
-        btn.textContent = 'refine with gemini ↗';
+        setStatus('Prompt ready', 'ok');
+        btn.disabled = false;
+        btn.innerHTML = 'Refine with Gemini <span class="btn-arrow">↗</span>';
       } else {
         let errMsg = data.error || 'Refinement failed';
-        
-        // 3. Robust Rate Limit Handling
         if (errMsg.includes('Quota exceeded') || errMsg.includes('429') || errMsg.includes('rate-limit')) {
-            
-            // Bypass the fake "Retry-After" loop specifically for hard daily limits.
-            if (errMsg.includes('limit: 20') || errMsg.includes('free_tier_requests') || errMsg.includes('daily')) {
-                setStatus('Google API Daily Quota Exhausted. Update backend to gemini-2.0-flash to fix.', 'err');
-                
-                if (cooldownInterval) clearInterval(cooldownInterval);
-                
-                // Permanently disable UI until app is restarted/fixed to prevent loops
-                btn.disabled = true;
-                btn.classList.add('cooldown');
-                btn.textContent = 'Daily Limit Reached 🛑';
-                return;
-            }
-
-            const timeMatch = errMsg.match(/retry in ([\d.]+)\s*s?/i);
-            
-            if (timeMatch) {
-                // Add a 5 second safety buffer. Google's server sliding window is slightly decoupled from client time.
-                const waitSeconds = Math.ceil(parseFloat(timeMatch[1])) + 5;
-                startCooldownTimer(waitSeconds);
-            } else {
-                setStatus('API rate limit may be active. Please wait a moment.', 'err');
-                startCooldownTimer(60); 
-            }
-            return; // Exit here. The cooldown timer handles re-enabling the button.
+          if (errMsg.includes('limit: 20') || errMsg.includes('free_tier_requests') || errMsg.includes('daily')) {
+            setStatus('Google API Daily Quota Exhausted. Update backend to gemini-2.0-flash to fix.', 'err');
+            if (cooldownInterval) clearInterval(cooldownInterval);
+            btn.disabled = true;
+            btn.classList.add('cooldown');
+            btn.innerHTML = 'Daily Limit Reached';
+            return;
+          }
+          const timeMatch = errMsg.match(/retry in ([\d.]+)\s*s?/i);
+          if (timeMatch) {
+            startCooldownTimer(Math.ceil(parseFloat(timeMatch[1])) + 5);
+          } else {
+            startCooldownTimer(60);
+          }
+          return;
         }
-        
         setStatus(errMsg, 'err');
-        btn.disabled = false; 
-        btn.textContent = 'refine with gemini ↗';
+        btn.disabled = false;
+        btn.innerHTML = 'Refine with Gemini <span class="btn-arrow">↗</span>';
       }
     } catch (e) {
       setStatus('Network or server error: ' + e.message, 'err');
-      btn.disabled = false; 
-      btn.textContent = 'refine with gemini ↗';
+      btn.disabled = false;
+      btn.innerHTML = 'Refine with Gemini <span class="btn-arrow">↗</span>';
     }
   }
 
   function showPrompt(text, original) {
     document.getElementById('promptText').textContent = text;
-    document.getElementById('promptCard').classList.remove('hidden');
+    revealPanel('promptCard');
     addHistory(text, original);
+    setTimeout(() => document.getElementById('promptCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
   }
 
+  // ── Copy ──
   function copyPrompt() {
     const text = document.getElementById('promptText').textContent;
+    const done = () => {
+      const b = document.querySelector('.copy-btn');
+      b.textContent = 'Copied!';
+      setTimeout(() => b.textContent = 'Copy', 1800);
+    };
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(showCopiedState);
+      navigator.clipboard.writeText(text).then(done);
     } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            showCopiedState();
-        } catch (err) {
-            console.error('Fallback: Oops, unable to copy', err);
-        }
-        document.body.removeChild(textArea);
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); done(); } catch {}
+      document.body.removeChild(ta);
     }
   }
 
-  function showCopiedState() {
-      const b = document.querySelector('.copy-btn');
-      b.textContent = 'copied!';
-      setTimeout(() => b.textContent = 'copy', 1600);
-  }
-
+  // ── History ──
   function addHistory(prompt, original) {
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (history.length > 0 && history[0].prompt === prompt) return;
-    
     history.unshift({ prompt, original, time, tone: selectedTone });
     if (history.length > 10) history.pop();
     renderHistory();
@@ -678,18 +1004,24 @@
     const list = document.getElementById('historyList');
     const wrap = document.getElementById('historyWrap');
     list.innerHTML = '';
-    
-    history.forEach(h => {
+    history.forEach((h, i) => {
       const el = document.createElement('div');
       el.className = 'history-item';
-      el.innerHTML = `<div class="history-snippet">${h.prompt}</div><div class="history-meta">${h.time} · ${h.tone}</div>`;
+      el.innerHTML = `
+        <div class="history-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="history-content">
+          <div class="history-snippet">${h.prompt}</div>
+          <div class="history-meta">${h.time}</div>
+        </div>
+        <div class="history-tone">${h.tone}</div>
+      `;
       el.onclick = () => {
         showTranscript(h.original);
         document.getElementById('promptText').textContent = h.prompt;
-        document.getElementById('promptCard').classList.remove('hidden');
+        revealPanel('promptCard');
         document.querySelectorAll('.tone-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.tone === h.tone);
-            if(b.dataset.tone === h.tone) selectedTone = h.tone;
+          b.classList.toggle('active', b.dataset.tone === h.tone);
+          if (b.dataset.tone === h.tone) selectedTone = h.tone;
         });
         setStatus('');
       };
