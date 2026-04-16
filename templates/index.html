@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice → Prompt Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a18;
+      --ink2: #555550;
+      --ink3: #99998f;
+      --surface: #faf9f7;
+      --surface2: #f1f0ec;
+      --surface3: #e8e7e2;
+      --accent: #D85A30;
+      --accent2: #F0997B;
+      --accent-bg: #FAECE7;
+      --accent-border: #f0b49a;
+      --green: #3B6D11;
+      --green-bg: #EAF3DE;
+      --border: rgba(30,28,20,0.10);
+      --border2: rgba(30,28,20,0.18);
+      --r: 14px;
+      --rm: 9px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    html { background: var(--surface); color: var(--ink); }
+    body { font-family: 'DM Mono', monospace; min-height: 100vh; background: var(--surface); }
+
+    .page { max-width: 700px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+
+    /* Header */
+    .header { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 2rem; }
+    .header h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 32px; font-weight: 400;
+      letter-spacing: -0.5px; color: var(--ink);
+      line-height: 1;
+    }
+    .header h1 em { font-style: italic; color: var(--accent); }
+    .badge {
+      font-size: 10px; letter-spacing: 1.2px; font-weight: 500;
+      background: var(--accent-bg); color: var(--accent);
+      padding: 4px 9px; border-radius: 20px;
+      border: 0.5px solid var(--accent-border);
+      margin-bottom: 4px;
+    }
+
+    /* Lang row */
+    .lang-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .lang-btn {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      padding: 5px 13px; border: 0.5px solid var(--border2);
+      border-radius: 20px; background: var(--surface);
+      color: var(--ink2); cursor: pointer; transition: all 0.15s;
+    }
+    .lang-btn:hover { background: var(--surface2); }
+    .lang-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+    /* Recorder */
+    .recorder-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--r);
+      padding: 1.75rem 1.25rem 1.25rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }
+    .orb-wrap { position: relative; display: inline-block; margin-bottom: 14px; }
+    .rec-orb {
+      width: 80px; height: 80px; border-radius: 50%;
+      border: 1.5px solid var(--border2);
+      background: var(--surface2);
+      cursor: pointer; display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 28px; transition: all 0.2s;
+      position: relative; z-index: 1;
+    }
+    .rec-orb:hover { background: var(--surface3); transform: scale(1.03); }
+    .rec-orb.recording {
+      background: var(--accent); border-color: var(--accent);
+      animation: orbPulse 1.3s ease-in-out infinite;
+    }
+    .rec-orb.processing {
+      background: var(--surface3); cursor: default;
+      animation: orbSpin 1.2s linear infinite;
+    }
+    .ring {
+      position: absolute; inset: -8px; border-radius: 50%;
+      border: 1.5px solid var(--accent); opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .rec-orb.recording ~ .ring { animation: ringPulse 1.3s ease-in-out infinite; }
+
+    @keyframes orbPulse {
+      0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(216,90,48,0.25); }
+      50%      { transform: scale(1.06); box-shadow: 0 0 0 14px rgba(216,90,48,0); }
+    }
+    @keyframes orbSpin { to { transform: rotate(360deg); } }
+    @keyframes ringPulse {
+      0%   { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .timer { font-size: 30px; font-weight: 300; letter-spacing: 3px; color: var(--ink); margin-bottom: 6px; }
+    .rec-label { font-size: 11px; color: var(--ink3); letter-spacing: 0.5px; margin-bottom: 12px; }
+
+    .waveform {
+      display: flex; align-items: center; justify-content: center;
+      gap: 3px; height: 36px; margin-bottom: 14px;
+    }
+    .wave-bar {
+      width: 4px; border-radius: 2px;
+      background: var(--accent2); height: 6px;
+      transition: height 0.05s ease;
+    }
+
+    .upload-row { display: flex; justify-content: center; }
+    .upload-btn {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      padding: 6px 15px; border: 0.5px solid var(--border2);
+      border-radius: 20px; background: var(--surface2);
+      color: var(--ink2); cursor: pointer; transition: all 0.15s;
+    }
+    .upload-btn:hover { background: var(--surface3); }
+
+    /* Status */
+    .status { font-size: 11px; color: var(--ink3); text-align: center; min-height: 26px; padding: 4px 0; letter-spacing: 0.3px; }
+    .status.err { color: #A32D2D; font-weight: 500; }
+    .status.ok  { color: var(--green); font-weight: 500; }
+
+    /* Transcript */
+    .panel {
+      background: var(--surface);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--r);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px;
+      background: var(--surface2);
+      border-bottom: 0.5px solid var(--border);
+    }
+    .panel-head .label { font-size: 10px; letter-spacing: 1px; color: var(--ink3); font-weight: bold; }
+    .panel-head .meta { font-size: 10px; color: var(--ink3); }
+    .panel-body { padding: 14px 16px; }
+    .editable {
+      font-size: 14px; line-height: 1.85; color: var(--ink);
+      outline: none; min-height: 64px; white-space: pre-wrap;
+    }
+    .editable:empty::before { content: attr(data-ph); color: var(--ink3); }
+    .edit-hint { font-size: 10px; color: var(--ink3); margin-top: 6px; }
+
+    /* Refine controls */
+    .refine-section { margin-bottom: 1rem; }
+    .section-label { font-size: 10px; letter-spacing: 1px; color: var(--ink3); font-weight: bold; margin-bottom: 8px; }
+    .tone-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tone-btn {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      padding: 5px 13px; border: 0.5px solid var(--border2);
+      border-radius: 20px; background: var(--surface);
+      color: var(--ink2); cursor: pointer; transition: all 0.15s;
+    }
+    .tone-btn:hover { background: var(--surface2); }
+    .tone-btn.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent-border); }
+
+    .refine-btn {
+      font-family: 'DM Mono', monospace; font-size: 12px;
+      padding: 9px 22px; background: var(--ink); color: #fff;
+      border: none; border-radius: 22px; cursor: pointer;
+      transition: all 0.2s ease-in-out; letter-spacing: 0.3px;
+    }
+    .refine-btn:hover { opacity: 0.82; }
+    /* Ensure a disabled button prevents clicks completely */
+    .refine-btn:disabled { 
+      opacity: 0.35; 
+      cursor: not-allowed; 
+      pointer-events: none; 
+    }
+    .refine-btn.cooldown { background: #A32D2D; opacity: 0.8; color: #fff; }
+
+    /* Prompt result */
+    .prompt-panel {
+      background: var(--accent-bg);
+      border: 0.5px solid var(--accent-border);
+      border-radius: var(--r);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .prompt-panel .panel-head { background: rgba(216,90,48,0.07); border-bottom-color: var(--accent-border); }
+    .prompt-panel .label { color: var(--accent); }
+    .prompt-text { 
+      font-size: 14px; 
+      line-height: 1.85; 
+      color: var(--ink); 
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    /* Custom scrollbar for prompt text */
+    .prompt-text::-webkit-scrollbar { width: 6px; }
+    .prompt-text::-webkit-scrollbar-thumb { background: var(--accent-border); border-radius: 4px; }
+
+    .copy-btn {
+      font-family: 'DM Mono', monospace; font-size: 10px;
+      padding: 4px 11px; border: 0.5px solid var(--accent-border);
+      border-radius: 20px; background: transparent;
+      color: var(--accent); cursor: pointer; transition: all 0.15s;
+    }
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+
+    /* History */
+    .divider { height: 0.5px; background: var(--border); margin: 1.5rem 0 1rem; }
+    .history-item {
+      border: 0.5px solid var(--border);
+      border-radius: var(--rm); padding: 10px 14px;
+      margin-bottom: 8px; cursor: pointer; transition: background 0.12s;
+    }
+    .history-item:hover { background: var(--surface2); }
+    .history-snippet { font-size: 12px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-meta { font-size: 10px; color: var(--ink3); margin-top: 3px; }
+
+    /* Hidden */
+    .hidden { display: none; }
+    #fileInput { display: none; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>Voice <em>→</em> Prompt</h1>
+    <span class="badge">STUDIO</span>
+  </div>
+
+  <!-- Language Selection -->
+  <div class="lang-row" id="langRow">
+    <button class="lang-btn active" data-lang="en-IN">EN</button>
+    <button class="lang-btn" data-lang="hi-IN">हि</button>
+    <button class="lang-btn" data-lang="ta-IN">த</button>
+    <button class="lang-btn" data-lang="te-IN">తె</button>
+    <button class="lang-btn" data-lang="kn-IN">ಕ</button>
+    <button class="lang-btn" data-lang="mr-IN">म</button>
+    <button class="lang-btn" data-lang="bn-IN">ব</button>
+    <button class="lang-btn" data-lang="gu-IN">ગ</button>
+  </div>
+
+  <!-- Recorder Section -->
+  <div class="recorder-card">
+    <div class="orb-wrap">
+      <button class="rec-orb" id="recBtn" onclick="toggleRecord()">
+        <span id="recIcon">🎤</span>
+      </button>
+      <div class="ring" id="ring"></div>
+    </div>
+    <div class="timer" id="timer">0:00</div>
+    <div class="waveform" id="waveform"></div>
+    <div class="rec-label" id="recLabel">tap to record</div>
+    <div class="upload-row">
+      <button class="upload-btn" onclick="document.getElementById('fileInput').click()">upload audio file</button>
+      <input type="file" id="fileInput" accept="audio/*,video/webm" onchange="handleUpload(event)" />
+    </div>
+  </div>
+
+  <div class="status" id="statusBar"></div>
+
+  <!-- Transcript Display -->
+  <div class="panel hidden" id="transcriptCard">
+    <div class="panel-head">
+      <span class="label">TRANSCRIPT</span>
+      <span class="meta" id="wordCount">0 words</span>
+    </div>
+    <div class="panel-body">
+      <div class="editable" id="transcriptText" contenteditable="true" data-ph="Your speech will appear here…"></div>
+      <div class="edit-hint">editable — fix any mistakes before refining</div>
+    </div>
+  </div>
+
+  <!-- Refine Controls -->
+  <div class="refine-section hidden" id="refineSection">
+    <div class="section-label">REFINE TONE</div>
+    <div class="tone-row">
+      <button class="tone-btn active" data-tone="clear">clear</button>
+      <button class="tone-btn" data-tone="detailed">detailed</button>
+      <button class="tone-btn" data-tone="concise">concise</button>
+      <button class="tone-btn" data-tone="creative">creative</button>
+      <button class="tone-btn" data-tone="technical">technical</button>
+      <button class="tone-btn" data-tone="step-by-step">step-by-step</button>
+    </div>
+    <button class="refine-btn" id="refineBtn" onclick="refinePrompt()">refine with gemini ↗</button>
+  </div>
+
+  <!-- Refined Prompt Output -->
+  <div class="prompt-panel panel hidden" id="promptCard">
+    <div class="panel-head">
+      <span class="label">REFINED PROMPT</span>
+      <button class="copy-btn" onclick="copyPrompt()">copy</button>
+    </div>
+    <div class="panel-body">
+      <div class="prompt-text" id="promptText"></div>
+    </div>
+  </div>
+
+  <!-- History Section -->
+  <div class="hidden" id="historyWrap">
+    <div class="divider"></div>
+    <div class="section-label">RECENT PROMPTS</div>
+    <div id="historyList"></div>
+  </div>
+
+</div>
+
+<script>
+  // --- Audio Context for Real Waveform ---
+  let audioContext;
+  let analyser;
+  let dataArray;
+  let source;
+  const numBars = 20;
+
+  // Initialize waveform bars
+  const wf = document.getElementById('waveform');
+  for (let i = 0; i < numBars; i++) {
+    const b = document.createElement('div');
+    b.className = 'wave-bar';
+    wf.appendChild(b);
+  }
+
+  let selectedLang = 'en-IN', selectedTone = 'clear';
+  let mediaRecorder, audioChunks = [], timerInterval, seconds = 0;
+  let isRecording = false, waveAnim;
+  const history = [];
+  let cooldownInterval = null;
+
+  // Language selectors
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.lang-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      selectedLang = b.dataset.lang;
+    });
+  });
+
+  // Tone selectors
+  document.querySelectorAll('.tone-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.tone-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      selectedTone = b.dataset.tone;
+    });
+  });
+
+  // Transcript word counter & paste sanitization
+  const transcriptEl = document.getElementById('transcriptText');
+  transcriptEl.addEventListener('input', function () {
+    const wc = this.textContent.trim().split(/\s+/).filter(Boolean).length;
+    document.getElementById('wordCount').textContent = wc + ' words';
+  });
+  
+  // Prevent rich text formatting when pasting into contenteditable
+  transcriptEl.addEventListener('paste', function(e) {
+    e.preventDefault();
+    const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  });
+
+  function setStatus(msg, type = '') {
+    const s = document.getElementById('statusBar');
+    s.textContent = msg;
+    s.className = 'status ' + type;
+  }
+
+  function updateTimer() {
+    seconds++;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    document.getElementById('timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function animateRealWave() {
+    if (!isRecording || !analyser) return;
+    waveAnim = requestAnimationFrame(animateRealWave);
+    analyser.getByteFrequencyData(dataArray);
+    
+    const bars = document.querySelectorAll('.wave-bar');
+    // Map the frequency data to the UI bars
+    const step = Math.floor(dataArray.length / numBars);
+    
+    for (let i = 0; i < numBars; i++) {
+      const val = dataArray[i * step] || 0;
+      // Calculate height (min 6px, max ~32px depending on volume)
+      const height = 6 + (val / 255) * 26; 
+      bars[i].style.height = height + 'px';
+    }
+  }
+
+  function stopWave() {
+    cancelAnimationFrame(waveAnim);
+    document.querySelectorAll('.wave-bar').forEach(b => b.style.height = '6px');
+    if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close();
+    }
+  }
+
+  async function toggleRecord() {
+    if (!isRecording) await startRecord();
+    else stopRecord();
+  }
+
+  async function startRecord() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+      mediaRecorder.start(100);
+      
+      // Setup Real Web Audio API waveform
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioContext = new AudioContextClass();
+      analyser = audioContext.createAnalyser();
+      source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyser.fftSize = 64; 
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      isRecording = true;
+      seconds = 0;
+      timerInterval = setInterval(updateTimer, 1000);
+      animateRealWave();
+      
+      setOrbState('recording');
+      setStatus('recording…');
+    } catch (e) {
+      console.error(e);
+      setStatus('microphone access denied or unavailable', 'err');
+    }
+  }
+
+  function stopRecord() {
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    clearInterval(timerInterval);
+    stopWave();
+    isRecording = false;
+    
+    setOrbState('processing');
+    setStatus('processing audio…');
+    
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      await sendToServer(blob, 'audio.webm');
+    };
+  }
+
+  async function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setOrbState('processing');
+    setStatus('uploading and processing…');
+    await sendToServer(file, file.name);
+    e.target.value = '';
+  }
+
+  async function sendToServer(blob, filename) {
+    const form = new FormData();
+    form.append('audio', blob, filename);
+    form.append('language', selectedLang);
+
+    try {
+      const res = await fetch('/transcribe', { method: 'POST', body: form });
+      const data = await res.json();
+      
+      if (data.success) {
+        showTranscript(data.transcript);
+        setStatus('transcription complete', 'ok');
+      } else {
+        let errMsg = data.error || 'Transcription failed';
+        if (errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {
+           errMsg = 'API rate limit reached. Please wait a moment and try again.';
+        }
+        setStatus(errMsg, 'err');
+      }
+    } catch (e) {
+      setStatus('Network or server error: ' + e.message, 'err');
+    }
+    setOrbState('idle');
+  }
+
+  function setOrbState(state) {
+    const btn = document.getElementById('recBtn');
+    const icon = document.getElementById('recIcon');
+    const label = document.getElementById('recLabel');
+    const ring = document.getElementById('ring');
+    
+    btn.className = 'rec-orb ' + state;
+    if (state === 'idle') {
+      icon.textContent = '🎤'; label.textContent = 'tap to record';
+      ring.style.animation = 'none';
+      document.getElementById('timer').textContent = '0:00';
+    } else if (state === 'recording') {
+      icon.textContent = '⏹'; label.textContent = 'recording — tap to stop';
+      ring.style.animation = '';
+    } else {
+      icon.textContent = '⟳'; label.textContent = 'processing…';
+    }
+  }
+
+  function showTranscript(text) {
+    const el = document.getElementById('transcriptText');
+    el.textContent = text;
+    // Dispatch input event to trigger word count calculation
+    el.dispatchEvent(new Event('input'));
+    
+    document.getElementById('transcriptCard').classList.remove('hidden');
+    document.getElementById('refineSection').classList.remove('hidden');
+  }
+  
+  // Hard lock the button to prevent duplicate requests and sliding window abuse
+  function startCooldownTimer(seconds) {
+      const btn = document.getElementById('refineBtn');
+      btn.disabled = true;
+      btn.classList.add('cooldown');
+      
+      let remaining = seconds;
+      
+      // Ensure any existing timers are totally destroyed
+      if (cooldownInterval) clearInterval(cooldownInterval);
+      
+      cooldownInterval = setInterval(() => {
+          if (remaining <= 0) {
+              clearInterval(cooldownInterval);
+              cooldownInterval = null; // Free memory and reset state
+              
+              // Fully unlock the button
+              btn.disabled = false;
+              btn.classList.remove('cooldown');
+              btn.textContent = 'refine with gemini ↗';
+              setStatus('Ready to retry. Click the button again.', 'ok');
+          } else {
+              btn.textContent = `locked — wait ${remaining}s`;
+              setStatus(`API quota reached. Please wait ${remaining} seconds.`, 'err');
+              remaining--;
+          }
+      }, 1000);
+  }
+
+  async function refinePrompt() {
+    const transcript = document.getElementById('transcriptText').textContent.trim();
+    
+    if (!transcript) { 
+        setStatus('no transcript to refine', 'err'); 
+        return; 
+    }
+
+    const btn = document.getElementById('refineBtn');
+    
+    // 1. Immediately disable and change text so the user physically sees the click register
+    btn.disabled = true; 
+    btn.textContent = 'engineering prompt…';
+    setStatus('engineering prompt with Gemini…', '');
+
+    // 2. Artificial delay (600ms) guarantees the user sees the visual state change
+    // This prevents the illusion of the button "doing nothing" if the API instantly returns 429
+    await new Promise(r => setTimeout(r, 600));
+
+    try {
+      const res = await fetch('/refine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript: transcript, tone: selectedTone })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        showPrompt(data.prompt, transcript);
+        setStatus('prompt ready', 'ok');
+        btn.disabled = false; 
+        btn.textContent = 'refine with gemini ↗';
+      } else {
+        let errMsg = data.error || 'Refinement failed';
+        
+        // 3. Robust Rate Limit Handling
+        if (errMsg.includes('Quota exceeded') || errMsg.includes('429') || errMsg.includes('rate-limit')) {
+            
+            // Bypass the fake "Retry-After" loop specifically for hard daily limits.
+            if (errMsg.includes('limit: 20') || errMsg.includes('free_tier_requests') || errMsg.includes('daily')) {
+                setStatus('Google API Daily Quota Exhausted. Update backend to gemini-2.0-flash to fix.', 'err');
+                
+                if (cooldownInterval) clearInterval(cooldownInterval);
+                
+                // Permanently disable UI until app is restarted/fixed to prevent loops
+                btn.disabled = true;
+                btn.classList.add('cooldown');
+                btn.textContent = 'Daily Limit Reached 🛑';
+                return;
+            }
+
+            const timeMatch = errMsg.match(/retry in ([\d.]+)\s*s?/i);
+            
+            if (timeMatch) {
+                // Add a 5 second safety buffer. Google's server sliding window is slightly decoupled from client time.
+                const waitSeconds = Math.ceil(parseFloat(timeMatch[1])) + 5;
+                startCooldownTimer(waitSeconds);
+            } else {
+                setStatus('API rate limit may be active. Please wait a moment.', 'err');
+                startCooldownTimer(60); 
+            }
+            return; // Exit here. The cooldown timer handles re-enabling the button.
+        }
+        
+        setStatus(errMsg, 'err');
+        btn.disabled = false; 
+        btn.textContent = 'refine with gemini ↗';
+      }
+    } catch (e) {
+      setStatus('Network or server error: ' + e.message, 'err');
+      btn.disabled = false; 
+      btn.textContent = 'refine with gemini ↗';
+    }
+  }
+
+  function showPrompt(text, original) {
+    document.getElementById('promptText').textContent = text;
+    document.getElementById('promptCard').classList.remove('hidden');
+    addHistory(text, original);
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('promptText').textContent;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(showCopiedState);
+    } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showCopiedState();
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    }
+  }
+
+  function showCopiedState() {
+      const b = document.querySelector('.copy-btn');
+      b.textContent = 'copied!';
+      setTimeout(() => b.textContent = 'copy', 1600);
+  }
+
+  function addHistory(prompt, original) {
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (history.length > 0 && history[0].prompt === prompt) return;
+    
+    history.unshift({ prompt, original, time, tone: selectedTone });
+    if (history.length > 10) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const wrap = document.getElementById('historyWrap');
+    list.innerHTML = '';
+    
+    history.forEach(h => {
+      const el = document.createElement('div');
+      el.className = 'history-item';
+      el.innerHTML = `<div class="history-snippet">${h.prompt}</div><div class="history-meta">${h.time} · ${h.tone}</div>`;
+      el.onclick = () => {
+        showTranscript(h.original);
+        document.getElementById('promptText').textContent = h.prompt;
+        document.getElementById('promptCard').classList.remove('hidden');
+        document.querySelectorAll('.tone-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.tone === h.tone);
+            if(b.dataset.tone === h.tone) selectedTone = h.tone;
+        });
+        setStatus('');
+      };
+      list.appendChild(el);
+    });
+    wrap.classList.remove('hidden');
+  }
+</script>
+</body>
+</html>

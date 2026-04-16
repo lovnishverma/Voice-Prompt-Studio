@@ -1,0 +1,72 @@
+# =========================
+# Operating System Files
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =========================
+# IDEs and Editors
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# =========================
+# Node.js
+# =========================
+node_modules/
+npm-debug.log
+yarn-error.log
+.env
+.env.local
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# =========================
+# Logs and Databases
+# =========================
+*.log
+*.sqlite
+*.sqlite3
+
+# =========================
+# Environment Variables & Secrets
+# =========================
+.env
+.env.*
+!.env.example
+secret.json
+credentials.json
