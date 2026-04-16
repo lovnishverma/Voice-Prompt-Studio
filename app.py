@@ -81,7 +81,7 @@ def index():
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
     # Cascade: Use client key if provided, fallback to environment variable
-    sarvam_key = request.form.get('sarvam_key', '').strip() or os.getenv("SARVAM_API_KEY")
+    sarvam_key = os.getenv("SARVAM_API_KEY")
     language = request.form.get('language', 'en-IN')
 
     if not sarvam_key:
@@ -199,9 +199,7 @@ def transcribe():
 @app.route('/refine', methods=['POST'])
 def refine():
     data = request.get_json() or {}
-
-    # Cascade: Use client key if provided, fallback to environment variable
-    gemini_key = data.get('gemini_key', '').strip() or os.getenv("GEMINI_API_KEY")
+    gemini_key = os.getenv("GEMINI_API_KEY")
     transcript = data.get('transcript', '').strip()
     tone = data.get('tone', 'clear')
 
