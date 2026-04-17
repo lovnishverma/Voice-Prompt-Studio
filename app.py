@@ -35,7 +35,7 @@ history_collection = None
 if MONGO_URI:
     try:
         client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-        db = client.get_database("voice_prompt_studio")
+        db = client.get_database("voicepromptstudio")
         history_collection = db.get_collection("prompts")
         logger.info("✅ Connected to MongoDB Atlas")
     except Exception as e:
