@@ -18,6 +18,8 @@ Voice → Prompt Studio is an intelligent, high-performance web application desi
 
 Built with a Flask backend and a lightweight, vanilla HTML/JS/CSS frontend, the system leverages **Sarvam AI** for highly accurate Indic and English speech-to-text, and **Google Gemini** for advanced, persona-driven prompt engineering.
 
+**Live Demo:**  https://lovnishverma-voice-prompt-studio.hf.space/
+
 ---
 
 <img width="787" height="836" alt="image" src="https://github.com/user-attachments/assets/834fb446-8755-4a2a-af24-74fe296d25fe" />
