@@ -1,3 +1,12 @@
+---
+title: Voice Prompt Studio
+emoji: 🦀
+colorFrom: green
+colorTo: yellow
+sdk: docker
+pinned: false
+---
+
 # 🎙️ Voice → Prompt Studio
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
@@ -173,3 +182,4 @@ Accepts a JSON payload to process the raw text through Gemini.
 
 ---
 *Developed by Lovnish Verma.*
+
