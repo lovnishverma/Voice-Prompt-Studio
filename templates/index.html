@@ -990,12 +990,43 @@
     }
   }
 
-  // ── History ──
-  function addHistory(prompt, original) {
+// ── History ──
+  let history = []; // Keep a local reference for rendering
+
+  // 1. Fetch history from MongoDB on page load
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const res = await fetch('/api/history');
+      if (res.ok) {
+        history = await res.json();
+        if (history.length > 0) renderHistory();
+      }
+    } catch (e) {
+      console.error("Failed to load history from database", e);
+    }
+  });
+
+  // 2. Save new prompt to MongoDB, then update UI
+  async function addHistory(prompt, original) {
+    if (history.length > 0 && history[0].prompt === prompt) return; // Prevent duplicates
+    
+    const newEntry = { prompt, original, tone: selectedTone };
+    
+    try {
+      // Send to backend
+      fetch('/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry)
+      });
+    } catch (e) {
+      console.error("Failed to save to database", e);
+    }
+
+    // Immediately update local UI for responsiveness
     const now = new Date();
-    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (history.length > 0 && history[0].prompt === prompt) return;
-    history.unshift({ prompt, original, time, tone: selectedTone });
+    newEntry.time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    history.unshift(newEntry);
     if (history.length > 10) history.pop();
     renderHistory();
   }
@@ -1011,9 +1042,9 @@
         <div class="history-num">${String(i+1).padStart(2,'0')}</div>
         <div class="history-content">
           <div class="history-snippet">${h.prompt}</div>
-          <div class="history-meta">${h.time}</div>
+          <div class="history-meta">${h.time || ''}</div>
         </div>
-        <div class="history-tone">${h.tone}</div>
+        <div class="history-tone">${h.tone || 'clear'}</div>
       `;
       el.onclick = () => {
         showTranscript(h.original);

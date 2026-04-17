@@ -3,6 +3,8 @@ import tempfile
 import requests
 import logging
 from flask import Flask, request, jsonify, render_template
+from pymongo import MongoClient
+import datetime
 from dotenv import load_dotenv
 
 # Try to import pydub for audio chunking
@@ -24,6 +26,24 @@ app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 
 SARVAM_API_URL = "https://api.sarvam.ai/speech-to-text"
 
+
+# --- MONGODB SETUP ---
+MONGO_URI = os.getenv("MONGO_URI")
+db = None
+history_collection = None
+
+if MONGO_URI:
+    try:
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        db = client.get_database("voice_prompt_studio")
+        history_collection = db.get_collection("prompts")
+        logger.info("✅ Connected to MongoDB Atlas")
+    except Exception as e:
+        logger.error(f"❌ Failed to connect to MongoDB: {e}")
+else:
+    logger.warning("⚠️ MONGO_URI not found. Prompt history will not be saved.")
+
+
 def get_available_model_name(api_key):
     """
     Dynamically finds a working model from the user's account using the REST API.
@@ -32,15 +52,15 @@ def get_available_model_name(api_key):
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
         resp = requests.get(url, timeout=10)
-        
+
         if resp.status_code != 200:
             logger.error(f"Failed to list models: {resp.text}")
             # Fallback to the most likely stable alias if the list request fails
             return "models/gemini-1.5-flash"
-            
+
         data = resp.json()
         available_models = []
-        
+
         for m in data.get('models', []):
             if 'generateContent' in m.get('supportedGenerationMethods', []):
                 available_models.append(m.get('name'))
@@ -56,7 +76,7 @@ def get_available_model_name(api_key):
             "models/gemini-pro",
             "models/gemini-1.0-pro"
         ]
-        
+
         # 1. Check if any preferred model is in the available list
         for preferred in preferred_order:
             if preferred in available_models:
@@ -65,12 +85,13 @@ def get_available_model_name(api_key):
 
         # 2. If none of the preferred ones exist, take the first available one
         fallback = available_models[0]
-        logger.warning(f"Preferred models missing. Falling back to: {fallback}")
+        logger.warning(
+            f"Preferred models missing. Falling back to: {fallback}")
         return fallback
 
     except Exception as e:
         logger.error(f"Error listing models: {e}")
-        return "models/gemini-1.5-flash" # Safe default
+        return "models/gemini-1.5-flash"  # Safe default
 
 
 @app.route('/')
@@ -104,26 +125,29 @@ def transcribe():
         if HAS_PYDUB:
             try:
                 audio = AudioSegment.from_file(temp_filepath)
-                chunk_length_ms = 29 * 1000 # 29 seconds (safe margin below 30s)
-                
+                # 29 seconds (safe margin below 30s)
+                chunk_length_ms = 29 * 1000
+
                 # If audio is longer than 29s, process in chunks
                 if len(audio) > chunk_length_ms:
-                    chunks = [audio[i:i + chunk_length_ms] for i in range(0, len(audio), chunk_length_ms)]
+                    chunks = [audio[i:i + chunk_length_ms]
+                              for i in range(0, len(audio), chunk_length_ms)]
                     full_transcript = []
-                    
+
                     for i, chunk in enumerate(chunks):
                         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as chunk_file:
                             chunk.export(chunk_file.name, format="wav")
-                            
+
                             with open(chunk_file.name, 'rb') as f:
-                                files = {'file': (f"chunk_{i}.wav", f, 'audio/wav')}
+                                files = {
+                                    'file': (f"chunk_{i}.wav", f, 'audio/wav')}
                                 data = {
                                     'language_code': language,
                                     'model': 'saarika:v2.5',
                                     'with_timestamps': 'false'
                                 }
                                 headers = {'api-subscription-key': sarvam_key}
-                                
+
                                 response = requests.post(
                                     SARVAM_API_URL,
                                     headers=headers,
@@ -132,10 +156,11 @@ def transcribe():
                                     timeout=60
                                 )
                         os.remove(chunk_file.name)
-                        
+
                         if response.status_code == 200:
                             result = response.json()
-                            transcript = result.get('transcript') or result.get('text') or ''
+                            transcript = result.get(
+                                'transcript') or result.get('text') or ''
                             if transcript:
                                 full_transcript.append(transcript.strip())
                         else:
@@ -146,13 +171,14 @@ def transcribe():
                             except ValueError:
                                 err_msg = response.text
                             return jsonify({'error': f'Sarvam API error on chunk {i+1}: {err_msg}'}), response.status_code
-                    
+
                     os.remove(temp_filepath)
                     return jsonify({'success': True, 'transcript': " ".join(full_transcript)})
 
             except Exception as e:
-                logger.warning(f"Pydub chunking failed (ffmpeg likely missing): {e}. Falling back to direct upload.")
-                pass # Proceed to direct upload fallback
+                logger.warning(
+                    f"Pydub chunking failed (ffmpeg likely missing): {e}. Falling back to direct upload.")
+                pass  # Proceed to direct upload fallback
 
         # --- DIRECT UPLOAD FALLBACK (For <30s files or missing ffmpeg) ---
         with open(temp_filepath, 'rb') as f:
@@ -163,7 +189,7 @@ def transcribe():
                 'with_timestamps': 'false'
             }
             headers = {'api-subscription-key': sarvam_key}
-            
+
             response = requests.post(
                 SARVAM_API_URL,
                 headers=headers,
@@ -183,11 +209,11 @@ def transcribe():
                 err_msg = response.json().get('message', response.text)
             except ValueError:
                 err_msg = response.text
-                
+
             # Intercept the specific 30s limit error to guide the user to the fix
             if "duration exceeds" in err_msg.lower() or "30 seconds" in err_msg.lower():
                 return jsonify({'error': 'Audio > 30s. To enable automatic chunking, run: "pip install pydub" AND install ffmpeg on your server.'}), 400
-                
+
             return jsonify({'error': f'Sarvam API error: {err_msg}'}), response.status_code
 
     except Exception as e:
@@ -240,18 +266,19 @@ def refine():
     )
 
     headers = {"Content-Type": "application/json"}
-    
+
     # Merged system_prompt directly into the user contents block to ensure schema compatibility
     payload = {
         "contents": [
             {
-                "role": "user", 
+                "role": "user",
                 "parts": [{"text": f"{system_prompt}\n\n---\nRaw Voice Transcript:\n{transcript}"}]
             }
         ],
         "generationConfig": {
-            "temperature": 0.8, 
-            "maxOutputTokens": 8192 # Tripled max tokens to prevent truncation on extremely detailed responses
+            "temperature": 0.8,
+            # Tripled max tokens to prevent truncation on extremely detailed responses
+            "maxOutputTokens": 8192
         }
     }
 
@@ -289,6 +316,52 @@ def refine():
         return jsonify({'error': 'Gemini API request timed out while generating a response.'}), 504
     except Exception as e:
         return jsonify({'error': f'Refinement processing failed: {str(e)}'}), 500
+
+
+@app.route('/api/history', methods=['GET'])
+def get_history():
+    if history_collection is None:
+        return jsonify([])
+
+    try:
+        # Fetch the 10 most recent prompts, sorted by newest first
+        cursor = history_collection.find(
+            {}, {"_id": 0}).sort("timestamp", -1).limit(10)
+        docs = list(cursor)
+
+        # Format the timestamp for the frontend
+        for doc in docs:
+            if 'timestamp' in doc:
+                # Convert UTC to local time string for the UI
+                doc['time'] = doc['timestamp'].strftime("%I:%M %p")
+
+        return jsonify(docs)
+    except Exception as e:
+        logger.error(f"Failed to fetch history: {e}")
+        return jsonify([])
+
+
+@app.route('/api/history', methods=['POST'])
+def save_history():
+    if history_collection is None:
+        return jsonify({'error': 'Database not connected'}), 503
+
+    data = request.get_json()
+    if not data or not data.get('prompt'):
+        return jsonify({'error': 'Invalid data'}), 400
+
+    try:
+        doc = {
+            "prompt": data.get("prompt"),
+            "original": data.get("original"),
+            "tone": data.get("tone"),
+            "timestamp": datetime.datetime.utcnow()  # Store as UTC
+        }
+        history_collection.insert_one(doc)
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Failed to save history: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
