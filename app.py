@@ -135,6 +135,12 @@ def transcribe():
                     full_transcript = []
 
                     for i, chunk in enumerate(chunks):
+                        # FIX: Skip chunks smaller than 500ms
+                        if len(chunk) < 500:
+                            logger.info(
+                                f"Skipping chunk {i} - too short ({len(chunk)}ms)")
+                            continue
+
                         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as chunk_file:
                             chunk.export(chunk_file.name, format="wav")
 
@@ -180,7 +186,7 @@ def transcribe():
                     f"Pydub chunking failed (ffmpeg likely missing): {e}. Falling back to direct upload.")
                 pass  # Proceed to direct upload fallback
 
-        # --- DIRECT UPLOAD FALLBACK (For <30s files or missing ffmpeg) ---
+        # DIRECT UPLOAD FALLBACK (For <30s files or missing ffmpeg)
         with open(temp_filepath, 'rb') as f:
             files = {'file': (file.filename, f, file.mimetype or 'audio/webm')}
             data = {
